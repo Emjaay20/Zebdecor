@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+*.log
+.DS_Store
+cms/wordpress/zebdecor_db_data
+cms/wordpress/zebdecor_wp_data

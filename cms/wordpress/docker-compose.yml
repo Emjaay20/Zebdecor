@@ -1,0 +1,39 @@
+version: '3.9'
+
+# ZEBDECOR HEADLESS WORDPRESS + WOOCOMMERCE ORIGIN STACK
+# Optional companion container stack for testing live WordPress -> Next.js HMAC Webhooks locally.
+# Next.js automatically falls back to its Resilient Typed Snapshot when this stack is stopped.
+
+services:
+  zebdecor-db:
+    image: mariadb:11.2
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: zebdecor_wp
+      MYSQL_USER: zebdecor
+      MYSQL_PASSWORD: zebdecor_secure_db_pass
+      MYSQL_ROOT_PASSWORD: zebdecor_root_pass
+    volumes:
+      - zebdecor_db_data:/var/lib/mysql
+
+  zebdecor-wordpress:
+    image: wordpress:6.7-php8.3-apache
+    depends_on:
+      - zebdecor-db
+    ports:
+      - '8088:80'
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: zebdecor-db:3306
+      WORDPRESS_DB_NAME: zebdecor_wp
+      WORDPRESS_DB_USER: zebdecor
+      WORDPRESS_DB_PASSWORD: zebdecor_secure_db_pass
+      NEXTJS_WEBHOOK_URL: http://host.docker.internal:3003/api/webhooks/wordpress
+      WORDPRESS_WEBHOOK_SECRET: zebdecor-wp-vip-hmac-secret-2026
+    volumes:
+      - zebdecor_wp_data:/var/www/html
+      - ./zebdecor-headless-bridge.php:/var/www/html/wp-content/mu-plugins/zebdecor-headless-bridge.php:ro
+
+volumes:
+  zebdecor_db_data:
+  zebdecor_wp_data:
